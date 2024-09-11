@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const body_parser = require('body-parser');
 
-const PORT = 5050;
+const PORT = 6902;
 
 app.use(body_parser.json());
 
@@ -23,5 +23,5 @@ app.use('/auth',auth_router);
 
 app.listen(PORT,(err) => {
     if(err) console.log('error connecting to server');
-    else console.log(`connected at port - ${PORT}`);
+    else console.log(`server running at port : ${PORT}`);
 })
