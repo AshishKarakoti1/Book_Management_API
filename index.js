@@ -1,27 +1,26 @@
 const express = require('express');
 const app = express();
-const body_parser = require('body-parser');
+const bodyParser = require('body-parser');
 
 const PORT = 6902;
 
-app.use(body_parser.json());
+app.use(bodyParser.json());
 
-// *** imports *** //
-const connectMongoDB = require('./dbConnect');
-const books_router = require('./Routes/books');
-const auth_router = require('./Routes/auth');
+// *** Imports *** //
+const connectToDatabase = require('./dbConnect');
+const booksRouter = require('./Routes/books');
+const authRouter = require('./Routes/auth');
 
-// *** connecting to MongoDB *** //
-connectMongoDB('mongodb://localhost:27017/Books_Management')
-    .then(() => {console.log('connected to mongoDB')})
-    .catch(() => {console.log('error connecting to database')})
+// *** Connecting to MongoDB *** //
+connectToDatabase('mongodb://localhost:27017/Books_Management')
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(() => console.log('Error connecting to database'));
 
+// *** Routing Endpoints *** //
+app.use('/books', booksRouter);
+app.use('/auth', authRouter);
 
-// *** routing endpoints *** //
-app.use('/book',books_router);
-app.use('/auth',auth_router);
-
-app.listen(PORT,(err) => {
-    if(err) console.log('error connecting to server');
-    else console.log(`server running at port : ${PORT}`);
-})
+app.listen(PORT, (err) => {
+    if (err) console.log('Error starting server');
+    else console.log(`Server running on port: ${PORT}`);
+});

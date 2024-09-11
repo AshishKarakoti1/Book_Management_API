@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = "helloWorld";
 
-async function isValidUser(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1]; 
+async function authenticateUser(req, res, next) {
+    const token = req.headers['authorization']?.split(' ')[1];
 
     if (!token) {
-        return res.status(401).json({ success: false, message: 'No token provided' });
+        return res.status(401).json({ success: false, message: 'No token found' });
     }
 
     try {
@@ -17,4 +17,4 @@ async function isValidUser(req, res, next) {
     }
 }
 
-module.exports = isValidUser;
+module.exports = authenticateUser;

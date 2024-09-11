@@ -1,29 +1,21 @@
-const books = require('../Models/book');
+const Book = require('../Models/book');
 
-async function handleGetAllBooks(req, res) {
+async function getAllBooks(req, res) {
     const { genre, author, publication, page = 1 } = req.query;
 
     const limit = 5;
-    let startIdx = (Number(page) - 1) * limit;
-    let endIdx = startIdx + limit;
+    const startIdx = (Number(page) - 1) * limit;
+    const endIdx = startIdx + limit;
 
     try {
-        const allBooks = await books.find();
+        let query = {};
 
-        let filteredBooks = allBooks;
+        if (genre) query.genre = genre;
+        if (author) query.author = author;
+        if (publication) query.publication = Number(publication);
 
-        if (genre) {
-            filteredBooks = filteredBooks.filter(book => book.genre === genre);
-        }
-        if (author) {
-            filteredBooks = filteredBooks.filter(book => book.author === author);
-        }
-        if (publication) {
-            const publicationNumber = Number(publication);
-            filteredBooks = filteredBooks.filter(book => book.publication === publicationNumber);
-        }
-
-        const pagedBooks = filteredBooks.slice(startIdx, endIdx);
+        const allBooks = await Book.find(query);
+        const pagedBooks = allBooks.slice(startIdx, endIdx);
 
         res.status(200).json({ success: true, books: pagedBooks });
     } catch (err) {
@@ -31,21 +23,20 @@ async function handleGetAllBooks(req, res) {
     }
 }
 
-
-async function handleAddNewBook(req,res) {
+async function addNewBook(req, res) {
     try {
-        const { title, author, genre, publication, image_url, ISBN, description } = req.body;
+        const { title, author, genre, publication, imageUrl, ISBN, description } = req.body;
 
-        if (!title || !author) {
+        if (!title || !author || !ISBN) {
             return res.status(400).json({ success: false, message: 'Title, Author, and ISBN are required fields.' });
         }
 
-        const newBook = new books({
+        const newBook = new Book({
             title,
             author,
             genre: genre || '',
-            publication: publication || null, 
-            image_url: image_url || '', 
+            publication: publication || null,
+            imageUrl: imageUrl || '',
             ISBN: ISBN || null,
             description: description || '',
         });
@@ -55,18 +46,18 @@ async function handleAddNewBook(req,res) {
         res.status(201).json({ success: true, message: 'Book added successfully!', book: newBook });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: 'Error adding the book'});
+        res.status(500).json({ success: false, message: 'Error adding the book' });
     }
 }
 
-async function handleGetBookById(req, res) {
+async function getBookById(req, res) {
     const { id } = req.params;
     if (!id) {
         return res.status(400).json({ success: false, message: 'Please provide a valid ID' });
     }
 
     try {
-        const book = await books.findById(id);
+        const book = await Book.findById(id);
         if (!book) {
             return res.status(404).json({ success: false, message: 'Book not found' });
         }
@@ -77,39 +68,39 @@ async function handleGetBookById(req, res) {
     }
 }
 
+async function updateBookById(req, res) {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'Please provide a valid ID' });
 
-async function handleUpdateBookByID(req,res) {
-    const {id} = req.params;
-    if(!id) res.status(400).json({ success: false, message: 'please provide a valid id'});
-    const { title, author, genre, publication, image_url, ISBN, description } = req.body;
+    const { title, author, genre, publication, imageUrl, ISBN, description } = req.body;
 
-    try{
-        const book = await books.findById(id);
+    try {
+        const book = await Book.findById(id);
         if (!book) {
             return res.status(404).json({ success: false, message: 'Book not found' });
         }
+
         book.title = title || book.title;
         book.author = author || book.author;
         book.genre = genre || book.genre;
         book.publication = publication || book.publication;
-        book.image_url = image_url || book.image_url;
+        book.imageUrl = imageUrl || book.imageUrl;
         book.ISBN = ISBN || book.ISBN;
         book.description = description || book.description;
 
         await book.save();
-        res.json({ success: true, message:"book updated",book });
-    } catch(err){
-        res.status(500).json({ success: false, message: 'Error updating book'});
+        res.json({ success: true, message: 'Book updated successfully', book });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Error updating the book' });
     }
-
 }
 
-async function handleDeleteBookById(req,res) {
-    const {id} = req.params;
-    if(!id) res.status(400).json({ success: false, message: 'please provide a valid id'});
+async function deleteBookById(req, res) {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'Please provide a valid ID' });
 
     try {
-        const deletedBook = await books.findByIdAndDelete(id);
+        const deletedBook = await Book.findByIdAndDelete(id);
         if (!deletedBook) {
             return res.status(404).json({ success: false, message: 'Book not found' });
         }
@@ -118,20 +109,26 @@ async function handleDeleteBookById(req,res) {
         console.error(err);
         res.status(500).json({ success: false, message: 'Error deleting the book' });
     }
-
 }
 
-async function handleSearchBook(req,res) {
-    const {ISBN} = req.query;
-    if(!ISBN) res.status(400).json({ success: false, message: 'please provide a valid ISBN number'});
+async function searchBook(req, res) {
+    const { ISBN } = req.query;
+    if (!ISBN) return res.status(400).json({ success: false, message: 'Please provide a valid ISBN number' });
 
-    try{
-        const userBook = await books.findOne({ ISBN });
-        if(!userBook)  res.status(404).json({ success: false, message: 'Book not found' });
-        res.json({ success: true, message: `Book with ISBN number ${ISBN} --> `, book: userBook });
-    } catch(err){
+    try {
+        const book = await Book.findOne({ ISBN });
+        if (!book) return res.status(404).json({ success: false, message: 'Book not found' });
+        res.json({ success: true, message: `Book with ISBN number ${ISBN}`, book });
+    } catch (err) {
         res.status(500).json({ success: false, message: 'Error fetching the book' });
     }
 }
 
-module.exports = {handleGetAllBooks,handleAddNewBook,handleGetBookById,handleUpdateBookByID,handleDeleteBookById,handleSearchBook};
+module.exports = {
+    getAllBooks,
+    addNewBook,
+    getBookById,
+    updateBookById,
+    deleteBookById,
+    searchBook
+};

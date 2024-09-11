@@ -1,18 +1,25 @@
 const express = require('express');
-const Router = express.Router();
-const {handleGetAllBooks,handleAddNewBook,handleGetBookById,handleUpdateBookByID,handleDeleteBookById,handleSearchBook} = require('../Controllers/books');
-const isValidUser = require('../Middlewares/validUser');
+const router = express.Router();
+const { 
+    getAllBooks, 
+    addNewBook, 
+    getBookById, 
+    updateBookById, 
+    deleteBookById, 
+    searchBook 
+} = require('../Controllers/books');
+const validateUser = require('../Middlewares/validUser');
 
-Router.route('/')
-    .get(handleGetAllBooks)
-    .post(isValidUser,handleAddNewBook);
+router.route('/')
+    .get(getAllBooks)
+    .post(validateUser, addNewBook);
 
-Router.route('/search')
-    .get(isValidUser,handleSearchBook)
+router.route('/search')
+    .get(validateUser, searchBook);
 
-Router.route('/:id')
-    .get(isValidUser,handleGetBookById)
-    .put(isValidUser,handleUpdateBookByID)
-    .delete(isValidUser,handleDeleteBookById);
+router.route('/:id')
+    .get(validateUser, getBookById)
+    .put(validateUser, updateBookById)
+    .delete(validateUser, deleteBookById);
 
-module.exports = Router;
+module.exports = router;
